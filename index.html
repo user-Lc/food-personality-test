@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>你的性格是哪种食物？· 测试预览</title>
+<style>
+  :root{
+    --bg:#0f1117; --card:#1a1d27; --card2:#222634; --line:#2c3142;
+    --text:#eef1f7; --sub:#9aa3b2; --accent:#FF6B6B; --accent2:#9B6BFF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:linear-gradient(160deg,#0f1117,#161a25);color:var(--text);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6;}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 18px 60px;}
+  .hero{text-align:center;padding:30px 10px 10px;}
+  .hero h1{font-size:26px;margin:0 0 8px;background:linear-gradient(90deg,#FF6B6B,#9B6BFF);
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hero p{color:var(--sub);font-size:14px;margin:0;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin:16px 0;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);}
+  .progress{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin:10px 0 4px;}
+  .progress > i{display:block;height:100%;background:linear-gradient(90deg,#FF6B6B,#9B6BFF);border-radius:99px;transition:.3s;}
+  .qnum{color:var(--sub);font-size:13px;}
+  .qtext{font-size:18px;font-weight:600;margin:10px 0 16px;}
+  .opt{display:block;width:100%;text-align:left;background:var(--card2);border:1px solid var(--line);
+    color:var(--text);border-radius:14px;padding:14px 16px;margin:10px 0;font-size:15px;cursor:pointer;
+    transition:.15s;}
+  .opt:hover{border-color:var(--accent);transform:translateY(-1px);}
+  .opt.sel{background:linear-gradient(90deg,rgba(255,107,107,.18),rgba(155,107,255,.18));border-color:var(--accent2);}
+  .btn{display:inline-block;background:linear-gradient(90deg,#FF6B6B,#9B6BFF);color:#fff;border:0;
+    border-radius:99px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .tags span{display:inline-block;background:var(--card2);border:1px solid var(--line);color:var(--accent2);
+    font-size:12px;padding:4px 10px;border-radius:99px;margin:4px 6px 0 0;}
+  .res-emoji{font-size:54px;text-align:center;}
+  .res-name{font-size:22px;font-weight:700;text-align:center;margin:6px 0;}
+  .res-comment{text-align:center;color:var(--sub);font-style:italic;margin:0 0 14px;}
+  .res-sec{font-size:13px;color:var(--accent);font-weight:700;margin:16px 0 6px;letter-spacing:.5px;}
+  .res-body{font-size:14px;color:#d7dcea;}
+  .radar{display:block;margin:10px auto;}
+  .summary{background:linear-gradient(90deg,rgba(255,107,107,.12),rgba(155,107,255,.12));
+    border-left:3px solid var(--accent2);padding:12px 14px;border-radius:10px;font-size:15px;margin-top:14px;}
+  .share{width:100%;text-align:center;margin-top:18px;color:var(--sub);font-size:13px;}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="app"></div>
+</div>
+
+<script>
+/* ===== 数据源（与 data.json 一致，便于直接打开预览） ===== */
+const DATA = {
+  "meta":{"title":"你的性格是哪种食物？","subtitle":"24 题测出你的「人格食物类型」"},
+  "dimensions":[
+    {"key":"soc","name":"社交欲","color":"#FF6B6B"},
+    {"key":"heal","name":"治愈力","color":"#FFB36B"},
+    {"key":"quirk","name":"反差感","color":"#9B6BFF"},
+    {"key":"disc","name":"自律值","color":"#4ECDC4"},
+    {"key":"thrill","name":"刺激欲","color":"#FF8C42"},
+    {"key":"art","name":"文艺值","color":"#FF6B9D"}
+  ],
+  "typeDimWeights":{
+    "H":{"soc":3,"heal":2,"thrill":1},"M":{"art":3,"disc":2,"quirk":1},
+    "K":{"thrill":3,"soc":2,"quirk":1},"D":{"heal":3,"soc":1,"art":2},
+    "L":{"quirk":3,"thrill":2,"soc":1},"S":{"disc":3,"art":2,"soc":1}
+  },
+  "questions":[
+    {"id":1,"q":"周五晚上 8 点，你最理想的状态是？","options":[{"id":"A","text":"拉个群喊人冲火锅，热热闹闹最舒服","type":"H"},{"id":"B","text":"关灯窝沙发，看部慢节奏文艺片","type":"M"},{"id":"C","text":"下楼路边摊撸串，冰啤走起","type":"K"},{"id":"D","text":"煮碗红糖小圆子，追喜欢的剧","type":"D"}]},
+    {"id":2,"q":"朋友甩来一句「周末去哪玩」，你第一反应是？","options":[{"id":"A","text":"提前备好健康轻食，周末宅家自律养生","type":"S"},{"id":"B","text":"搜罗城里最野的宵夜，臭豆腐螺蛳粉走起","type":"L"},{"id":"C","text":"组局！火锅烧烤人均随便，开心就行","type":"H"},{"id":"D","text":"找条人少景美的小众路线，最好能拍出片","type":"M"}]},
+    {"id":3,"q":"深夜饿了，你的灵魂宵夜是？","options":[{"id":"A","text":"烧烤摊来一把，肉要带焦边","type":"K"},{"id":"B","text":"甜品外卖，芝士蛋糕配奶茶","type":"D"},{"id":"C","text":"一碗清汤面，一个人也吃得很安静","type":"S","egg":true},{"id":"D","text":"低卡沙拉碗，自律人设不掉线","type":"M"}]},
+    {"id":4,"q":"在社交场合，你通常是？","options":[{"id":"A","text":"主动暖场的那个人，气氛组组长","type":"H"},{"id":"B","text":"直接冲上去跟陌生人聊天的行动派","type":"K"},{"id":"C","text":"安静观察者，等有感觉再开口","type":"M"},{"id":"D","text":"不太爱凑热闹，小圈子就好","type":"S"}]},
+    {"id":5,"q":"点奶茶你必点？","options":[{"id":"A","text":"全糖奶盖，快乐至上","type":"D"},{"id":"B","text":"螺蛳粉奶茶/猎奇限定，越怪越想试","type":"L"},{"id":"C","text":"和姐妹拼单，大家喝啥我喝啥","type":"H"},{"id":"D","text":"加辣加酸次次不重样，重口爱好者","type":"K"}]},
+    {"id":6,"q":"你的手机相册主角是？","options":[{"id":"A","text":"极简风风景、光影与展览","type":"M"},{"id":"B","text":"健身打卡、健康餐与步数","type":"S"},{"id":"C","text":"猫咪小狗和甜甜的日常","type":"D"},{"id":"D","text":"各种奇奇怪怪的探店怪味","type":"L"}]},
+    {"id":7,"q":"假期旅行你选哪种？","options":[{"id":"A","text":"三五好友包车嗨玩","type":"H"},{"id":"B","text":"说走就走，攻略写到一半就出发","type":"K"},{"id":"C","text":"酒店躺平，少折腾","type":"S"},{"id":"D","text":"文艺古城，慢逛小店","type":"M"}]},
+    {"id":8,"q":"别人眼中的你，更接近？","options":[{"id":"A","text":"甜系好人，谁都舍不得凶你","type":"D"},{"id":"B","text":"怪可爱的，越相处越上头","type":"L"},{"id":"C","text":"团宠，聚会不能没有你","type":"H"},{"id":"D","text":"风风火火，说干就干","type":"K"}]},
+    {"id":9,"q":"你的解压方式是？","options":[{"id":"A","text":"跑步/健身/早睡，身体爽了心就静","type":"S"},{"id":"B","text":"一个人看展听音乐，慢慢回血","type":"M"},{"id":"C","text":"买甜点犒劳自己","type":"D"},{"id":"D","text":"钻研小众爱好，越冷门越上头","type":"L"}]},
+    {"id":10,"q":"凌晨一点的你通常在？","options":[{"id":"A","text":"还在群里聊得起劲","type":"H"},{"id":"B","text":"刚结束一场说走就走的夜骑","type":"K"},{"id":"C","text":"写着只有自己懂的日记/灵感笔记","type":"M","egg":true},{"id":"D","text":"已经睡了，自律作息不允许熬夜","type":"S"}]},
+    {"id":11,"q":"你最怕别人说你？","options":[{"id":"A","text":"太难懂、太怪","type":"L"},{"id":"B","text":"太软、太好欺负","type":"D"},{"id":"C","text":"太吵、太热闹","type":"H"},{"id":"D","text":"太冷淡、太难接近","type":"M"}]},
+    {"id":12,"q":"购物车里最多的是？","options":[{"id":"A","text":"户外/运动/折腾装备","type":"K"},{"id":"B","text":"健身/养生/控糖好物","type":"S"},{"id":"C","text":"猎奇零食和怪味调料","type":"L"},{"id":"D","text":"甜甜的小物件和治愈系","type":"D"}]},
+    {"id":13,"q":"你发朋友圈的风格是？","options":[{"id":"A","text":"九宫格聚会现场，热热闹闹","type":"H"},{"id":"B","text":"一张图配一句留白文案","type":"M"},{"id":"C","text":"随手拍冒险瞬间","type":"K"},{"id":"D","text":"几乎不发，或者只发打卡","type":"S"}]},
+    {"id":14,"q":"约会你更想？","options":[{"id":"A","text":"一起做甜甜的手工/烘焙","type":"D"},{"id":"B","text":"去试那家全网争议的怪店","type":"L"},{"id":"C","text":"大排档边吃边聊","type":"H"},{"id":"D","text":"来场刺激的密室/蹦极","type":"K"}]},
+    {"id":15,"q":"你的房间风格是？","options":[{"id":"A","text":"低饱和原木，极简治愈","type":"M"},{"id":"B","text":"整洁到像样板间，东西都有归处","type":"S"},{"id":"C","text":"堆满玩偶和暖光小灯","type":"D"},{"id":"D","text":"乱中有序，角落里全是怪趣味收藏","type":"L"}]},
+    {"id":16,"q":"遇到难题你先？","options":[{"id":"A","text":"喊人一起头脑风暴","type":"H"},{"id":"B","text":"直接上手试，错了再改","type":"K"},{"id":"C","text":"列清单分步解决","type":"S"},{"id":"D","text":"先一个人想清楚再说","type":"M"}]},
+    {"id":17,"q":"周末独处你最享受？","options":[{"id":"A","text":"窝着看治愈番，内心被暖到","type":"D"},{"id":"B","text":"研究冷门玩法，越冷门越爽","type":"L"},{"id":"C","text":"深夜拉上同样睡不着的朋友压马路唠嗑","type":"H","egg":true},{"id":"D","text":"去陌生街区乱逛探险","type":"K"}]},
+    {"id":18,"q":"你最想收到的礼物？","options":[{"id":"A","text":"健身卡/健康好物","type":"S"},{"id":"B","text":"一本小众诗集或黑胶","type":"M"},{"id":"C","text":"一盒手作甜点","type":"D"},{"id":"D","text":"一个怪好玩的冷门小物","type":"L"}]},
+    {"id":19,"q":"吵架之后你？","options":[{"id":"A","text":"主动找人和好，热闹化解","type":"H"},{"id":"B","text":"直接冲去当面说开","type":"K"},{"id":"C","text":"自己闷着慢慢消化","type":"M"},{"id":"D","text":"冷静复盘，列清楚对错","type":"S"}]},
+    {"id":20,"q":"你眼中的浪漫是？","options":[{"id":"A","text":"一起试遍怪店和冷门体验","type":"L"},{"id":"B","text":"有人记得你爱吃的甜","type":"D"},{"id":"C","text":"一群人狂欢的夜晚","type":"H"},{"id":"D","text":"两人安静看一场日落","type":"M"}]},
+    {"id":21,"q":"你的歌单偏向？","options":[{"id":"A","text":"摇滚/说唱，节奏炸裂","type":"K"},{"id":"B","text":"轻音乐/白噪音，助眠养生","type":"S"},{"id":"C","text":"小众神曲，安利给懂的人","type":"L"},{"id":"D","text":"甜甜的情歌，循环上头","type":"D"}]},
+    {"id":22,"q":"如果变成一种味道，你希望是？","options":[{"id":"A","text":"热乎烟火气，谁靠近都暖","type":"H"},{"id":"B","text":"清冷回甘，耐人寻味","type":"M"},{"id":"C","text":"带点野劲儿的刺激感，越品越上头","type":"K","egg":true},{"id":"D","text":"干净清爽，毫无负担","type":"S"}]},
+    {"id":23,"q":"你最想开的一家店是？","options":[{"id":"A","text":"治愈系甜品屋","type":"D"},{"id":"B","text":"怪味研究所，越怪越火","type":"L"},{"id":"C","text":"深夜大排档，热闹到天亮","type":"H"},{"id":"D","text":"冒险体验馆，玩的就是心跳","type":"K"}]},
+    {"id":24,"q":"用一种天气形容自己？","options":[{"id":"A","text":"初雪后的晴朗，干净温柔","type":"M"},{"id":"B","text":"大晴天，舒服又规律","type":"S"},{"id":"C","text":"午后的棉花糖云，软软的","type":"D"},{"id":"D","text":"雷阵雨，说来就来够带劲","type":"L"}]}
+  ],
+  "eggQuestions":[3,10,17,22],
+  "results":{
+    "H":{"key":"H","name":"火锅派 · 沸腾社交家","emoji":"🍲","tags":["社交核武","E 人王","气氛组组长","热乎人"],"comment":"你就是人群里的那口锅，咕嘟咕嘟冒着热乎气，谁靠近都暖。","analysis":"你是天生的能量源。聚会不能没有你，冷场靠你救，热闹靠你续。你害怕孤单却也擅长把孤单变成团圆，朋友的事比自己的事还上心。你的情绪是外放的、滚烫的，开心要全场知道，难过也能三分钟翻篇。","advice":"1）学会独处充电，不必每次都当气氛组组长；2）别把所有人「煮」成一锅，留点私人边界；3）你的热情很贵，分给值得的人。","summary":"世界因你而沸腾，但记得留一口汤给自己。","radarProfile":{"soc":95,"heal":70,"thrill":55,"art":30,"quirk":30,"disc":20}},
+    "M":{"key":"M","name":"抹茶系 · 清冷艺术家","emoji":"🍵","tags":["高冷文青","慢生活家","留白大师","低饱和人类"],"comment":"别人在沸腾，你在回甘。不抢镜，却让人越看越安心。","analysis":"你自带一种「低饱和」的安静气场。你不需要热闹来证明存在，独处是你的充电方式。你审美在线、心思细腻，朋友圈像一本装帧考究的小书。表面淡，里面其实很浓——只是你不轻易倒给人看。","advice":"1）偶尔走出舒适区，别让「高冷」变成疏离；2）感受可以表达出来，不一定只靠滤镜；3）别在深夜独自内耗，找个人说一句也行。","summary":"你的清冷是自带的香气，但也别忘了偶尔冒个热气。","radarProfile":{"soc":25,"heal":55,"thrill":20,"art":95,"quirk":55,"disc":75}},
+    "K":{"key":"K","name":"烧烤党 · 豪爽行动派","emoji":"🍢","tags":["行动猛人","直球选手","烟火气担当","说干就干"],"comment":"人生就像烧烤，滋啦一声就开整，想那么多干嘛。","analysis":"你是风风火火的行动派。想到就做，错也认，改也快。你重义气、接地气，朋友有事你第一个冲。你不喜欢磨叽和套路，真诚直接是你的底色。偶尔有点冲动，但那股烟火气特别招人喜欢。","advice":"1）有时慢半拍想清楚，能少走弯路；2）冲动发言/消费前先数三秒；3）给细腻和共情留个座位，它们也是力量。","summary":"你点的每一把火，都让生活更有滋味。","radarProfile":{"soc":80,"heal":40,"thrill":95,"art":30,"quirk":50,"disc":15}},
+    "D":{"key":"D","name":"甜点控 · 温柔治愈师","emoji":"🍰","tags":["人间甜豆","情绪按摩师","软心怪兽","治愈系本系"],"comment":"你是别人坏情绪里的一勺糖，自己却总把甜先给别人。","analysis":"你柔软、细腻、共情力拉满。谁难过都愿意找你聊，因为你知道怎么把人哄好。你记录生活里的小甜，也擅长把苦日子过出糖味。但太在意别人感受，容易把自己排在最后。","advice":"1）先治愈自己再治愈别人，你不是情绪提款机；2）学会说「不」，温柔也要有牙齿；3）把糖也留一口给自己，你值得被甜到。","summary":"甜是你的底色，但你也要被甜到才行。","radarProfile":{"soc":65,"heal":95,"thrill":35,"art":60,"quirk":35,"disc":30}},
+    "L":{"key":"L","name":"螺蛳粉族 · 真香反差萌","emoji":"🍜","tags":["反差萌王","真香体质","宝藏怪人","越品越上头"],"comment":"一开始嫌弃，后来真香——说的就是你，宝藏都藏在后劲里。","analysis":"你是那种「第一口劝退，第三口上头」的人。表面怪，里面很有料；不按套路出牌，却总有惊喜。你不怕被误解，因为懂你的人自然懂。你小众、专一、忠诚度极高，一旦认定就死磕。","advice":"1）别急着自我否定，你的独特是稀缺资源；2）给外人留个「入口」，别全锁起来；3）真香可以，但别为了特别而特别。","summary":"你是一碗需要慢慢品的饭，真香都在后头。","radarProfile":{"soc":55,"heal":40,"thrill":80,"art":35,"quirk":95,"disc":15}},
+    "S":{"key":"S","name":"沙拉派 · 自律生活家","emoji":"🥗","tags":["自律卷王","控糖达人","清爽主义","人间清醒"],"comment":"你的生活，连油花都规划好了——清醒，且自由。","analysis":"你是清爽的人间清醒。作息、饮食、目标都安排得明明白白，享受掌控感。你不被情绪牵着走，也不随大流。你干净、克制、有边界，活得像个「样板间」——只是偶尔也想偷一口懒。","advice":"1）偶尔放纵一下，完美主义放自己一马；2）快乐不靠打卡，允许计划外的小确幸；3）别把自律变成自我绑架。","summary":"自律给你自由，但自由也允许你偷一口懒。","radarProfile":{"soc":20,"heal":35,"thrill":25,"art":55,"quirk":20,"disc":95}},
+    "EGG":{"key":"EGG","name":"隐藏款 · 深夜食堂主理人","emoji":"🌙","tags":["夜猫子","隐藏关卡","自由魂","限定彩蛋"],"comment":"白天你是别人，深夜你才是自己——这碗饭，只煮给懂夜的人。","analysis":"你触发了隐藏彩蛋：在 Q3 / Q10 / Q17 / Q22 你都选了那个「深夜自由魂」的选项。说明你有一套只在夜里才摊开的自己——清醒、私密、有点酷，也有点温柔。白天你在 worldly 里运转，深夜你才是主理人，守着自己的小食堂。","advice":"1）珍惜这份独处的清醒，它是你的充电站；2）别让夜太长了，白天也值得认真活；3）把深夜的灵感，留一点给白天。","summary":"灯亮着，饭热着，你自有归处。","radarProfile":{"soc":40,"heal":60,"thrill":70,"art":70,"quirk":80,"disc":50}}
+  }
+};
+
+/* ===== 逻辑 ===== */
+const TYPES=["H","M","K","D","L","S"];
+const CORR={
+  H:{highlight:["soc","heal"],low:["disc","quirk"]},
+  M:{highlight:["art","disc"],low:["soc","thrill"]},
+  K:{highlight:["thrill","soc"],low:["disc"]},
+  D:{highlight:["heal","art"],low:["thrill"]},
+  L:{highlight:["quirk","thrill"],low:["disc"]},
+  S:{highlight:["disc","art"],low:["soc","thrill"]}
+};
+const JUDGE_ORDER=["H","K","D","L","M","S"];
+
+const state={answers:{},cur:0};
+const app=document.getElementById('app');
+
+function renderIntro(){
+  app.innerHTML=`
+  <div class="hero">
+    <h1>${DATA.meta.title}</h1>
+    <p>${DATA.meta.subtitle}</p>
+  </div>
+  <div class="card">
+    <div class="res-sec">测试引言</div>
+    <div class="res-body">
+      <b>主题：</b>人格对应的是什么食物类型。<br/>
+      <b>目的：</b>用 24 道有代入感的场景题，把你的性格映射成 6 种食物人格之一（火锅 / 抹茶 / 烧烤 / 甜点 / 螺蛳粉 / 沙拉），并找出隐藏款。<br/>
+      <b>你将获得：</b>① 你的专属食物人格与称号标签；② 一张 6 维性格雷达图；③ 专属评语、深度分析与成长建议；④ 一句可发朋友圈的总结。
+    </div>
+    <button class="btn" id="start">开始测试 →</button>
+  </div>`;
+  document.getElementById('start').onclick=()=>{state.cur=0;renderQ();};
+}
+
+function renderQ(){
+  const i=state.cur, q=DATA.questions[i], total=DATA.questions.length;
+  const pct=Math.round((i/total)*100);
+  const chosen=state.answers[q.id];
+  app.innerHTML=`
+  <div class="card">
+    <div class="qnum">第 ${i+1} / ${total} 题</div>
+    <div class="progress"><i style="width:${pct}%"></i></div>
+    <div class="qtext">${q.q}</div>
+    ${q.options.map(o=>`<button class="opt ${chosen===o.id?'sel':''}" data-o="${o.id}">${o.text}</button>`).join('')}
+    <div style="text-align:right;margin-top:6px">
+      ${i>0?'<button class="btn" id="prev" style="background:#333">上一题</button> ':''}
+      <button class="btn" id="next" ${chosen?'':'disabled'}>${i<total-1?'下一题 →':'查看结果 🎉'}</button>
+    </div>
+  </div>`;
+  app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    state.answers[q.id]=b.dataset.o; renderQ();
+  });
+  if(i>0) document.getElementById('prev').onclick=()=>{state.cur--;renderQ();};
+  document.getElementById('next').onclick=()=>{
+    if(!state.answers[q.id]) return;
+    if(i<total-1){state.cur++;renderQ();} else renderResult();
+  };
+}
+
+function compute(){
+  const food={H:0,M:0,K:0,D:0,L:0,S:0};
+  const dim={soc:0,heal:0,quirk:0,disc:0,thrill:0,art:0};
+  const eggPicked=DATA.eggQuestions.every(qid=>{
+    const q=DATA.questions.find(x=>x.id===qid);
+    const oid=state.answers[qid]; const o=q.options.find(x=>x.id===oid);
+    return o && o.egg;
+  });
+  DATA.questions.forEach(q=>{
+    const oid=state.answers[q.id]; if(!oid) return;
+    const o=q.options.find(x=>x.id===oid); if(!o) return;
+    food[o.type]+=2;
+    const w=DATA.typeDimWeights[o.type];
+    for(const k in w) dim[k]+=w[k];
+  });
+  const norm={};
+  for(const k in dim) norm[k]=Math.max(8,Math.min(100,Math.round(dim[k]/72*100)));
+  return {food,dim:norm,egg:eggPicked};
+}
+
+const PROF=Object.fromEntries(TYPES.map(t=>[t,DATA.results[t].radarProfile]));
+const DIMKEYS=DATA.dimensions.map(d=>d.key);
+function dist(a,b){return Math.sqrt(DIMKEYS.reduce((s,k)=>s+(a[k]-b[k])*(a[k]-b[k]),0));}
+
+function decide(r){
+  if(r.egg) return "EGG";
+  const max=Math.max(...TYPES.map(t=>r.food[t]));
+  let tops=TYPES.filter(t=>r.food[t]===max);
+  // 附加条件（同分微调）
+  if(tops.includes("H")&&tops.includes("K")&&r.dim.soc>=r.dim.thrill) return "H";
+  if(tops.includes("M")&&tops.includes("S")&&r.dim.art>=r.dim.disc) return "M";
+  // 排除条件（重判）
+  tops=tops.filter(t=> !(t==="S" && r.dim.disc<35) && !(t==="L" && r.dim.quirk<30));
+  if(tops.length===0) return maxDimType(r.dim);
+  if(tops.length===1) return tops[0];
+  // 同分处理：在并列类型中取离「典型画像」最近的（6 维欧氏距离）
+  tops.sort((a,b)=> dist(r.dim,PROF[a]) - dist(r.dim,PROF[b]));
+  return tops[0];
+}
+
+function maxDimType(dim){
+  let best=null,bv=-1;
+  TYPES.forEach(t=>{
+    const w=DATA.typeDimWeights[t]; let s=0;
+    for(const k in w) s+=w[k]*dim[k];
+    if(s>bv){bv=s;best=t;}
+  });
+  return best||"H";
+}
+
+function radarSVG(profile,user){
+  const dims=DATA.dimensions, n=dims.length, cx=140, cy=130, R=100;
+  const ang=i=>-Math.PI/2 + i*2*Math.PI/n;
+  const pt=(i,r)=>[cx+Math.cos(ang(i))*r, cy+Math.sin(ang(i))*r];
+  let grid="", axes="", labels="";
+  [0.25,0.5,0.75,1].forEach(f=>{
+    const pts=dims.map((_,i)=>pt(i,R*f).join(",")).join(" ");
+    grid+=`<polygon points="${pts}" fill="none" stroke="#2c3142" stroke-width="1"/>`;
+  });
+  dims.forEach((d,i)=>{
+    const[ex,ey]=pt(i,R);
+    axes+=`<line x1="${cx}" y1="${cy}" x2="${ex}" y2="${ey}" stroke="#2c3142" stroke-width="1"/>`;
+    const[lx,ly]=pt(i,R+22);
+    labels+=`<text x="${lx}" y="${ly}" fill="#9aa3b2" font-size="11" text-anchor="middle" dominant-baseline="middle">${d.name}</text>`;
+  });
+  const up=dims.map((d,i)=>pt(i,R*(user[d.key]/100)).join(",")).join(" ");
+  const rp=dims.map((d,i)=>pt(i,R*(profile[d.key]/100)).join(",")).join(" ");
+  const ul=dims.map((d,i)=>{const[x,y]=pt(i,R*(user[d.key]/100));return `<circle cx="${x}" cy="${y}" r="3" fill="#FF6B6B"/>`;}).join("");
+  return `<svg class="radar" width="280" height="260" viewBox="0 0 280 260">
+    ${grid}${axes}
+    <polygon points="${rp}" fill="rgba(155,107,255,.18)" stroke="#9B6BFF" stroke-width="2"/>
+    <polygon points="${up}" fill="rgba(255,107,107,.22)" stroke="#FF6B6B" stroke-width="2"/>
+    ${ul}${labels}
+  </svg>`;
+}
+
+function renderResult(){
+  const r=compute();
+  const key=decide(r);
+  const res=DATA.results[key];
+  const card=(k)=>{const o=DATA.results[k];return `<div class="res-sec" style="color:#9aa3b2;font-weight:600">「${o.name}」六维画像</div>`;};
+  app.innerHTML=`
+  <div class="card">
+    <div class="res-emoji">${res.emoji}</div>
+    <div class="res-name">${res.name}</div>
+    <div class="res-comment">「${res.comment}」</div>
+    <div class="tags">${res.tags.map(t=>`<span>${t}</span>`).join('')}</div>
+    <div class="res-sec">你的六维性格雷达</div>
+    ${radarSVG(res.radarProfile,r.dim)}
+    <div style="text-align:center;color:#9aa3b2;font-size:12px">红=你，紫=该类型典型画像</div>
+    <div class="res-sec">深度分析</div>
+    <div class="res-body">${res.analysis}</div>
+    <div class="res-sec">成长建议</div>
+    <div class="res-body">${res.advice}</div>
+    <div class="summary">「${res.summary}」</div>
+    <div class="share">—— 把你的食物人格分享给朋友 ——<br/>
+      <button class="btn" id="again">再测一次 ↻</button>
+    </div>
+  </div>`;
+  document.getElementById('again').onclick=()=>{state.answers={};state.cur=0;renderIntro();};
+}
+
+renderIntro();
+</script>
+</body>
+</html>
